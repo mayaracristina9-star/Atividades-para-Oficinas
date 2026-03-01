@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missão ODS: Conectando o Futuro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060d1a;
+            --surface: #0d1b2e;
+            --surface2: #112240;
+            --border: rgba(255,255,255,0.08);
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --gold: #f59e0b;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        body::before {
+            content:'';
+            position:fixed; inset:0;
+            background:
+                radial-gradient(ellipse 80% 50% at 10% 10%, rgba(56,189,248,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 80%, rgba(99,102,241,0.07) 0%, transparent 60%);
+            pointer-events:none; z-index:0;
+        }
+        h1,h2,h3{ font-family:'Bebas Neue',sans-serif; letter-spacing:.05em; }
+
+        /* SCREENS */
+        .screen{ display:none; position:relative; z-index:1; }
+        .screen.active{ display:flex; }
+
+        /* ── SETUP ── */
+        #screen-setup{
+            min-height:100vh; flex-direction:column;
+            align-items:center; justify-content:center; padding:2rem; gap:1.5rem;
+        }
+        .setup-logo{ font-size:clamp(2.5rem,6vw,4.5rem); color:var(--accent); text-align:center; line-height:1; }
+        .setup-logo span{ display:block; font-family:'DM Sans',sans-serif; font-size:clamp(.85rem,1.5vw,1rem); color:var(--text-muted); font-weight:500; letter-spacing:.15em; text-transform:uppercase; margin-top:.3rem; }
+        .setup-card{ background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:2rem 2.5rem; width:100%; max-width:720px; display:flex; flex-direction:column; gap:1.5rem; box-shadow:0 25px 50px rgba(0,0,0,.4); }
+        .setup-section h3{ font-size:1.2rem; color:var(--accent); margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
+        .setup-section h3 .icon{ width:26px;height:26px; background:rgba(56,189,248,.15); border-radius:7px; display:flex;align-items:center;justify-content:center; font-size:.85rem; }
+        .form-group{ display:flex; flex-direction:column; gap:.4rem; }
+        .form-group label{ font-size:.8rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+        .form-group input,.form-group textarea,.form-group select{ background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.65rem .9rem; color:var(--text); font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; transition:border-color .2s; }
+        .form-group input:focus,.form-group textarea:focus{ border-color:var(--accent); }
+        .form-group textarea{ resize:vertical; min-height:70px; }
+        .teams-grid{ display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+        .team-input-row{ display:flex; align-items:center; gap:.6rem; }
+        .team-color-dot{ width:13px;height:13px; border-radius:50%; flex-shrink:0; }
+        .config-row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+        .option-group{ display:flex; gap:.4rem; flex-wrap:wrap; }
+        .option-btn{ padding:.45rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:.85rem; cursor:pointer; transition:all .2s; }
+        .option-btn:hover{ border-color:var(--accent); color:var(--text); }
+        .option-btn.selected{ background:var(--accent); border-color:var(--accent); color:#000; font-weight:700; }
+        .btn-start{ width:100%; padding:1rem; background:linear-gradient(135deg,#38bdf8,#6366f1); border:none; border-radius:14px; color:white; font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:.1em; cursor:pointer; transition:all .3s; box-shadow:0 8px 25px rgba(56,189,248,.3); }
+        .btn-start:hover{ transform:translateY(-2px); box-shadow:0 12px 35px rgba(56,189,248,.45); }
+
+        /* ── GAME ── */
+        #screen-game{ min-height:100vh; flex-direction:column; }
+        .top-bar{ display:flex; align-items:center; justify-content:space-between; padding:.6rem 1.2rem; background:var(--surface); border-bottom:1px solid var(--border); gap:1rem; flex-shrink:0; }
+        .top-bar-title{ font-size:clamp(1.1rem,2.2vw,1.6rem); color:var(--accent); white-space:nowrap; }
+        .teams-bar{ display:flex; gap:.6rem; align-items:center; flex:1; justify-content:center; flex-wrap:wrap; }
+        .team-chip{ display:flex; align-items:center; gap:.4rem; padding:.35rem .8rem; border-radius:999px; border:2px solid transparent; background:var(--surface2); transition:all .3s; font-size:.82rem; font-weight:600; }
+        .team-chip.active{ border-color:currentColor; background:rgba(255,255,255,.08); transform:scale(1.05); box-shadow:0 0 12px currentColor; }
+        .team-chip .dot{ width:9px;height:9px; border-radius:50%; }
+        .team-chip .score-badge{ background:rgba(0,0,0,.3); border-radius:999px; padding:.08rem .4rem; font-size:.72rem; }
+        .timer-wrap{ display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+        .timer-display{ font-family:'Bebas Neue',sans-serif; font-size:clamp(1.4rem,2.8vw,2rem); color:var(--accent); transition:color .3s; min-width:65px; text-align:center; }
+        .timer-display.warning{ color:var(--gold); }
+        .timer-display.danger{ color:var(--error); animation:blink .8s infinite; }
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+        .timer-ring{ width:44px;height:44px; flex-shrink:0; }
+        .game-content{ flex:1; display:flex; flex-direction:column; overflow:hidden; padding:.6rem .9rem 0; gap:.6rem; }
+        .progress-bar-wrap{ display:flex; align-items:center; gap:.6rem; }
+        .progress-text{ font-size:.78rem; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+        .progress-track{ flex:1; height:5px; background:var(--surface2); border-radius:999px; overflow:hidden; }
+        .progress-fill{ height:100%; background:linear-gradient(90deg,#38bdf8,#22c55e); border-radius:999px; width:0%; transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+
+        /* ODS GRID */
+        .ods-grid{ display:grid; grid-template-columns:repeat(9,1fr); gap:5px; flex:1; min-height:0; }
+        .drop-zone{ border:2px dashed rgba(255,255,255,.15); border-radius:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:5px; cursor:pointer; transition:all .25s ease; background:var(--surface); position:relative; overflow:hidden; min-height:0; }
+        .drop-zone:hover:not(.filled){ background:rgba(56,189,248,.06); border-color:rgba(56,189,248,.4); }
+        .drop-zone.drag-over{ border-color:var(--accent); border-style:solid; transform:scale(1.04); box-shadow:0 0 18px rgba(56,189,248,.35); }
+        .drop-zone.selected-target{ border-color:var(--gold); border-style:solid; animation:pulse-target 1s infinite; }
+        @keyframes pulse-target{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.3)}50%{box-shadow:0 0 25px rgba(245,158,11,.6)}}
+        .drop-zone .zone-num{ font-family:'Bebas Neue',sans-serif; font-size:clamp(1.2rem,2.2vw,2rem); color:rgba(255,255,255,.2); line-height:1; }
+        .drop-zone .zone-label{ font-size:clamp(.42rem,.7vw,.6rem); text-transform:uppercase; letter-spacing:.05em; color:rgba(255,255,255,.2); font-weight:600; }
+        .drop-zone.filled{ border-style:solid; border-color:transparent; cursor:default; }
+        .drop-zone.filled .zone-num,.drop-zone.filled .zone-label{ display:none; }
+        .filled-content{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:3px; width:100%; }
+        .filled-num{ font-family:'Bebas Neue',sans-serif; font-size:clamp(.8rem,1.3vw,1.1rem); color:rgba(255,255,255,.9); line-height:1; }
+        .filled-title{ font-size:clamp(.34rem,.55vw,.52rem); font-weight:700; color:rgba(255,255,255,.85); line-height:1.2; text-transform:uppercase; }
+        .filled-team-dot{ width:7px;height:7px; border-radius:50%; margin-top:2px; border:1px solid rgba(255,255,255,.5); }
+        @keyframes fill-pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+        .fill-pop{ animation:fill-pop .4s cubic-bezier(.34,1.56,.64,1); }
+        .drop-zone.error-shake{ animation:shake .4s ease; }
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+        /* CARDS PANEL */
+        .cards-panel{ background:var(--surface); border-top:1px solid var(--border); padding:.55rem .9rem; flex-shrink:0; }
+        .cards-panel-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.4rem; min-height:1.2rem; }
+        .cards-panel-title{ font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+        .cards-scroll{ display:flex; gap:.45rem; overflow-x:auto; padding-bottom:.25rem; scroll-snap-type:x mandatory; }
+        .cards-scroll::-webkit-scrollbar{ height:3px; }
+        .cards-scroll::-webkit-scrollbar-track{ background:transparent; }
+        .cards-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:999px; }
+        .desc-card{ flex-shrink:0; scroll-snap-align:start; background:var(--surface2); border:2px solid var(--border); border-radius:9px; padding:.55rem .75rem; cursor:grab; font-size:clamp(.62rem,1vw,.78rem); line-height:1.4; max-width:clamp(130px,17vw,200px); min-width:clamp(110px,14vw,170px); transition:all .2s; user-select:none; border-top-width:3px; }
+        .desc-card:hover{ transform:translateY(-3px); border-color:var(--accent); box-shadow:0 6px 18px rgba(0,0,0,.3); }
+        .desc-card.dragging{ opacity:.4; cursor:grabbing; }
+        .desc-card.selected{ border-color:var(--gold); box-shadow:0 0 18px rgba(245,158,11,.4); transform:translateY(-4px); }
+
+        /* FACT MODAL */
+        .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:100; padding:1.5rem; backdrop-filter:blur(4px); }
+        .modal-overlay.active{ display:flex; }
+        .fact-modal{ background:var(--surface); border-radius:20px; padding:1.8rem 2.2rem; max-width:480px; width:100%; text-align:center; border:1px solid var(--border); box-shadow:0 30px 60px rgba(0,0,0,.5); animation:modal-in .4s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes modal-in{from{transform:scale(.8) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+        .fact-ods-badge{ width:65px;height:65px; border-radius:13px; display:flex;align-items:center;justify-content:center; margin:0 auto .9rem; font-family:'Bebas Neue',sans-serif; font-size:1.9rem; color:white; }
+        .fact-title{ font-size:1.35rem; color:var(--text); margin-bottom:.4rem; }
+        .fact-subtitle{ font-size:.82rem; color:var(--text-muted); margin-bottom:1rem; }
+        .fact-bubble{ background:var(--surface2); border-radius:12px; padding:.9rem 1.1rem; margin-bottom:1rem; border-left:4px solid var(--accent); }
+        .fact-bubble .fact-icon{ font-size:1.4rem; margin-bottom:.3rem; }
+        .fact-bubble .fact-text{ font-size:.88rem; color:var(--text); line-height:1.5; }
+        .fact-team-note{ font-size:.78rem; padding:.35rem .85rem; border-radius:999px; display:inline-block; font-weight:600; margin-bottom:.9rem; }
+        .btn-next{ width:100%; padding:.8rem; background:linear-gradient(135deg,#38bdf8,#6366f1); border:none; border-radius:11px; color:white; font-family:'Bebas Neue',sans-serif; font-size:1.25rem; letter-spacing:.08em; cursor:pointer; transition:all .2s; }
+        .btn-next:hover{ opacity:.9; transform:translateY(-1px); }
+
+        /* VICTORY */
+        #screen-victory{ min-height:100vh; flex-direction:column; align-items:center; justify-content:flex-start; padding:2rem; gap:1.2rem; overflow-y:auto; }
+        .victory-title{ font-size:clamp(2.2rem,5.5vw,4.5rem); background:linear-gradient(135deg,#38bdf8,#22c55e,#f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; background-size:200%; animation:shimmer 3s linear infinite; text-align:center; }
+        @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+        .victory-message{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.1rem 1.6rem; max-width:600px; text-align:center; border-left:4px solid var(--accent); }
+        .victory-message p{ font-size:.9rem; line-height:1.6; color:var(--text); font-style:italic; }
+        .victory-scores{ display:flex; gap:.8rem; flex-wrap:wrap; justify-content:center; }
+        .score-card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.5rem; text-align:center; min-width:130px; position:relative; overflow:hidden; }
+        .score-card.winner{ border-color:var(--gold); box-shadow:0 0 25px rgba(245,158,11,.2); }
+        .score-card.winner::before{ content:'🏆'; position:absolute; top:-4px; right:8px; font-size:1.4rem; }
+        .score-card .s-name{ font-size:.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.25rem; }
+        .score-card .s-num{ font-family:'Bebas Neue',sans-serif; font-size:2.2rem; line-height:1; margin-bottom:.15rem; }
+        .score-card .s-label{ font-size:.68rem; color:var(--text-muted); }
+        .ods-mosaic{ display:grid; grid-template-columns:repeat(9,1fr); gap:5px; max-width:900px; width:100%; }
+        .mosaic-tile{ aspect-ratio:1; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px; text-align:center; animation:tile-appear .4s backwards; }
+        @keyframes tile-appear{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+        .mosaic-tile .t-num{ font-family:'Bebas Neue',sans-serif; font-size:clamp(.75rem,1.3vw,1.1rem); color:rgba(255,255,255,.9); line-height:1; }
+        .mosaic-tile .t-title{ font-size:clamp(.28rem,.45vw,.46rem); font-weight:700; color:rgba(255,255,255,.75); text-transform:uppercase; line-height:1.2; }
+        .stats-row{ display:flex; gap:.8rem; flex-wrap:wrap; justify-content:center; }
+        .stat-pill{ background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:.45rem 1.1rem; font-size:.82rem; display:flex; align-items:center; gap:.45rem; }
+        .stat-pill strong{ color:var(--accent); }
+        .btn-restart{ padding:.85rem 2.8rem; background:linear-gradient(135deg,#38bdf8,#6366f1); border:none; border-radius:14px; color:white; font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:.1em; cursor:pointer; transition:all .3s; box-shadow:0 8px 25px rgba(56,189,248,.3); }
+        .btn-restart:hover{ transform:translateY(-2px); box-shadow:0 12px 35px rgba(56,189,248,.45); }
+
+        /* TOAST */
+        .toast{ position:fixed; bottom:110px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--error); color:white; padding:.55rem 1.3rem; border-radius:999px; font-size:.82rem; font-weight:600; opacity:0; transition:all .3s; z-index:200; pointer-events:none; white-space:nowrap; }
+        .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+        .fullscreen-btn{ background:transparent; border:1px solid var(--border); border-radius:7px; color:var(--text-muted); padding:.28rem .55rem; cursor:pointer; font-size:.75rem; transition:all .2s; }
+        .fullscreen-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+        @media(max-width:768px){
+            .ods-grid{ grid-template-columns:repeat(5,1fr); }
+            .ods-mosaic{ grid-template-columns:repeat(5,1fr); }
+            .config-row{ grid-template-columns:1fr; }
+            .teams-grid{ grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="screen-setup" class="screen active">
+    <div class="setup-logo">
+        🌍 MISSÃO ODS
+        <span>Conectando o Futuro · Configure sua Turma</span>
+    </div>
+    <div class="setup-card">
+        <div class="setup-section">
+            <h3><span class="icon">👥</span> Equipes</h3>
+            <div class="teams-grid" id="teams-inputs"></div>
+            <div style="margin-top:.7rem;">
+                <div class="form-group">
+                    <label>Número de equipes</label>
+                    <div class="option-group" id="num-teams-options">
+                        <button class="option-btn selected" data-val="2">2 Equipes</button>
+                        <button class="option-btn" data-val="3">3 Equipes</button>
+                        <button class="option-btn" data-val="4">4 Equipes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="config-row">
+            <div class="setup-section">
+                <h3><span class="icon">⏱</span> Tempo de Jogo</h3>
+                <div class="option-group" id="timer-options">
+                    <button class="option-btn" data-val="180">3 min</button>
+                    <button class="option-btn selected" data-val="300">5 min</button>
+                    <button class="option-btn" data-val="600">10 min</button>
+                    <button class="option-btn" data-val="0">Sem limite</button>
+                </div>
+            </div>
+            <div class="setup-section">
+                <h3><span class="icon">🔊</span> Sons</h3>
+                <div class="option-group" id="sound-options">
+                    <button class="option-btn selected" data-val="1">Ativados</button>
+                    <button class="option-btn" data-val="0">Desativados</button>
+                </div>
+            </div>
+        </div>
+        <div class="setup-section">
+            <h3><span class="icon">✏️</span> Mensagem do Professor</h3>
+            <div class="form-group">
+                <label>Exibida na tela final (opcional)</label>
+                <textarea id="teacher-message" placeholder="Ex: Ótimo trabalho, turma! Agora vamos debater como podemos aplicar os ODS no nosso bairro..."></textarea>
+            </div>
+        </div>
+        <button class="btn-start" onclick="startGame()">▶ INICIAR MISSÃO</button>
+    </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen">
+    <div class="top-bar">
+        <div class="top-bar-title">🌍 MISSÃO ODS</div>
+        <div class="teams-bar" id="teams-bar"></div>
+        <div class="timer-wrap">
+            <svg class="timer-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
+                <circle id="timer-ring-fill" cx="18" cy="18" r="15.9" fill="none"
+                    stroke="#38bdf8" stroke-width="3"
+                    stroke-dasharray="100 100" stroke-dashoffset="0"
+                    stroke-linecap="round" transform="rotate(-90 18 18)"
+                    style="transition:stroke-dasharray 1s linear,stroke .5s"/>
+            </svg>
+            <div class="timer-display" id="timer-display">--:--</div>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Tela cheia">⛶</button>
+        </div>
+    </div>
+    <div class="game-content">
+        <div class="progress-bar-wrap">
+            <span class="progress-text" id="progress-text">0 / 17 ODS</span>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            <span class="progress-text" id="progress-pct">0%</span>
+        </div>
+        <div class="ods-grid" id="mural"></div>
+    </div>
+    <div class="cards-panel">
+        <div class="cards-panel-header">
+            <span class="cards-panel-title" id="default-hint">📋 Arraste ou clique para selecionar uma descrição, depois clique no número do ODS</span>
+            <span class="cards-panel-title" id="selected-card-hint" style="color:var(--gold);display:none;">✋ Agora clique no número do ODS correspondente no painel acima</span>
+        </div>
+        <div class="cards-scroll" id="cards-pile"></div>
+    </div>
+</div>
+
+<!-- VICTORY -->
+<div id="screen-victory" class="screen">
+    <div class="victory-title">MISSÃO CUMPRIDA! 🌍</div>
+    <p style="color:var(--text-muted);font-size:.92rem;text-align:center;">Todos os 17 ODS foram conectados. O futuro agradece!</p>
+    <div class="victory-message" id="teacher-message-display" style="display:none;">
+        <p id="teacher-message-text"></p>
+    </div>
+    <div class="victory-scores" id="victory-scores"></div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="ods-mosaic" id="ods-mosaic"></div>
+    <button class="btn-restart" onclick="location.reload()">🔄 JOGAR NOVAMENTE</button>
+</div>
+
+<!-- FACT MODAL -->
+<div class="modal-overlay" id="fact-modal">
+    <div class="fact-modal">
+        <div class="fact-ods-badge" id="modal-badge"></div>
+        <h2 class="fact-title" id="modal-title"></h2>
+        <p class="fact-subtitle" id="modal-subtitle"></p>
+        <div class="fact-bubble">
+            <div class="fact-icon" id="modal-icon"></div>
+            <p class="fact-text" id="modal-fact"></p>
+        </div>
+        <div class="fact-team-note" id="modal-team-note"></div>
+        <button class="btn-next" onclick="closeFactModal()">PRÓXIMA MISSÃO →</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const odsData = [
+    {id:1,  color:"#E5243B", title:"Erradicação da Pobreza",                   desc:"Acabar com a pobreza em todas as suas formas, em todos os lugares.",                                   fact:"Cerca de 700 milhões de pessoas ainda vivem com menos de US$ 2,15 por dia.", icon:"💸"},
+    {id:2,  color:"#DDA63A", title:"Fome Zero e Agricultura Sustentável",       desc:"Erradicar a fome, alcançar a segurança alimentar e melhorar a nutrição.",                              fact:"733 milhões de pessoas enfrentam fome crônica — 1 em cada 11 no mundo.", icon:"🌾"},
+    {id:3,  color:"#4C9F38", title:"Saúde e Bem-Estar",                         desc:"Assegurar uma vida saudável e promover o bem-estar para todos.",                                        fact:"5,4 milhões de crianças menores de 5 anos morrem por causas evitáveis a cada ano.", icon:"❤️"},
+    {id:4,  color:"#C5192D", title:"Educação de Qualidade",                     desc:"Assegurar a educação inclusiva, equitativa e de qualidade.",                                            fact:"250 milhões de crianças estão fora da escola no mundo inteiro.", icon:"📚"},
+    {id:5,  color:"#FF3A21", title:"Igualdade de Gênero",                       desc:"Alcançar a igualdade de gênero e empoderar todas as mulheres e meninas.",                              fact:"Mulheres ganham, em média, 20% menos que homens pelo mesmo trabalho.", icon:"⚧"},
+    {id:6,  color:"#26BDE2", title:"Água Potável e Saneamento",                 desc:"Assegurar a disponibilidade e gestão sustentável da água e saneamento.",                               fact:"2 bilhões de pessoas ainda não têm acesso à água potável segura em casa.", icon:"💧"},
+    {id:7,  color:"#FCC30B", title:"Energia Limpa e Acessível",                 desc:"Assegurar o acesso confiável, sustentável e moderno à energia.",                                        fact:"759 milhões de pessoas vivem sem acesso à eletricidade.", icon:"⚡"},
+    {id:8,  color:"#A21942", title:"Trabalho Decente e Crescimento Econômico",  desc:"Promover o crescimento econômico sustentável e trabalho digno para todos.",                           fact:"470 milhões de pessoas não conseguem encontrar trabalho adequado no mundo.", icon:"💼"},
+    {id:9,  color:"#FD6925", title:"Indústria, Inovação e Infraestrutura",      desc:"Construir infraestruturas resilientes e fomentar a inovação.",                                         fact:"2,6 bilhões de pessoas ainda não têm acesso confiável à internet.", icon:"🏗️"},
+    {id:10, color:"#DD1367", title:"Redução das Desigualdades",                 desc:"Reduzir a desigualdade dentro dos países e entre eles.",                                                fact:"O 1% mais rico possui mais riqueza do que os outros 99% do mundo juntos.", icon:"⚖️"},
+    {id:11, color:"#FD9D24", title:"Cidades e Comunidades Sustentáveis",        desc:"Tornar as cidades e os assentamentos humanos inclusivos e seguros.",                                    fact:"1 bilhão de pessoas vivem em favelas ou assentamentos informais.", icon:"🏙️"},
+    {id:12, color:"#BF8B2E", title:"Consumo e Produção Responsáveis",           desc:"Assegurar padrões de produção e de consumo sustentáveis.",                                             fact:"1/3 de toda a comida produzida no mundo é desperdiçada — 1,3 bilhão de toneladas por ano.", icon:"♻️"},
+    {id:13, color:"#3F7E44", title:"Ação Contra a Mudança Global do Clima",     desc:"Tomar medidas urgentes para combater a mudança climática.",                                            fact:"A última década foi a mais quente já registrada na história do planeta.", icon:"🌡️"},
+    {id:14, color:"#0A97D9", title:"Vida na Água",                              desc:"Conservação e uso sustentável dos oceanos, mares e recursos marinhos.",                                fact:"Mais de 1 milhão de espécies marinhas estão ameaçadas de extinção.", icon:"🌊"},
+    {id:15, color:"#56C02B", title:"Vida Terrestre",                            desc:"Proteger, recuperar e promover o uso sustentável dos ecossistemas terrestres.",                        fact:"10 milhões de hectares de floresta são destruídos a cada ano.", icon:"🌳"},
+    {id:16, color:"#00689D", title:"Paz, Justiça e Instituições Eficazes",      desc:"Promover sociedades pacíficas e inclusivas para o desenvolvimento sustentável.",                       fact:"1 em cada 3 mulheres no mundo já sofreu violência física ou sexual.", icon:"🕊️"},
+    {id:17, color:"#19486A", title:"Parcerias e Meios de Implementação",        desc:"Reforçar os meios de implementação e revitalizar a parceria global.",                                  fact:"Apenas US$ 2,5 tri dos US$ 6 tri anuais necessários para os ODS estão sendo investidos.", icon:"🤝"},
+];
+
+const teamColors   = ["#38bdf8","#22c55e","#f59e0b","#a855f7"];
+const teamDefaults = ["Equipe Azul","Equipe Verde","Equipe Ouro","Equipe Violeta"];
+
+let config = { numTeams:2, timerSeconds:300, soundEnabled:true, teacherMessage:"", teamNames:[...teamDefaults] };
+let gs = { correctCount:0, currentTeam:0, teams:[], timerInterval:null, remainingSeconds:0, totalSeconds:0, selectedCard:null, startTime:null };
+let audioCtx = null;
+
+// AUDIO
+function getACtx(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function playTone(freq,type,dur,vol=0.3,delay=0){
+    if(!config.soundEnabled) return;
+    try{
+        const ctx=getACtx(), osc=ctx.createOscillator(), g=ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type=type; osc.frequency.value=freq;
+        g.gain.setValueAtTime(0,ctx.currentTime+delay);
+        g.gain.linearRampToValueAtTime(vol,ctx.currentTime+delay+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+dur);
+        osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+dur+0.05);
+    }catch(e){}
+}
+function playSuccess(){ playTone(523,'sine',.12,.3); playTone(659,'sine',.12,.3,.12); playTone(784,'sine',.2,.35,.24); }
+function playError()  { playTone(220,'sawtooth',.2,.25); playTone(196,'sawtooth',.2,.25,.22); }
+function playVictory(){ [523,659,784,1047,784,1047,1319].forEach((f,i)=>playTone(f,'sine',.22,.35,i*.12)); }
+
+// SETUP UI
+function buildSetupUI(){
+    renderTeamInputs(config.numTeams);
+    document.querySelectorAll('#num-teams-options .option-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('#num-teams-options .option-btn').forEach(b=>b.classList.remove('selected'));
+            btn.classList.add('selected');
+            config.numTeams=parseInt(btn.dataset.val);
+            renderTeamInputs(config.numTeams);
+        });
+    });
+    document.querySelectorAll('#timer-options .option-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('#timer-options .option-btn').forEach(b=>b.classList.remove('selected'));
+            btn.classList.add('selected');
+            config.timerSeconds=parseInt(btn.dataset.val);
+        });
+    });
+    document.querySelectorAll('#sound-options .option-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('#sound-options .option-btn').forEach(b=>b.classList.remove('selected'));
+            btn.classList.add('selected');
+            config.soundEnabled=btn.dataset.val==='1';
+        });
+    });
+}
+
+function renderTeamInputs(n){
+    const c=document.getElementById('teams-inputs'); c.innerHTML='';
+    for(let i=0;i<n;i++){
+        const d=document.createElement('div'); d.className='form-group';
+        d.innerHTML=`<label>Equipe ${i+1}</label>
+        <div class="team-input-row">
+            <div class="team-color-dot" style="background:${teamColors[i]}"></div>
+            <input type="text" value="${config.teamNames[i]||teamDefaults[i]}"
+                oninput="config.teamNames[${i}]=this.value"
+                placeholder="Nome da equipe ${i+1}">
+        </div>`;
+        c.appendChild(d);
+    }
+}
+
+// START
+function startGame(){
+    config.teacherMessage=document.getElementById('teacher-message').value.trim();
+    gs.teams=[];
+    for(let i=0;i<config.numTeams;i++) gs.teams.push({name:config.teamNames[i]||teamDefaults[i], color:teamColors[i], score:0});
+    gs.currentTeam=0; gs.correctCount=0; gs.selectedCard=null; gs.startTime=Date.now();
+    showScreen('game');
+    buildTeamsBar(); buildMural(); buildCardsPile(); startTimer();
+}
+
+function buildTeamsBar(){
+    const bar=document.getElementById('teams-bar'); bar.innerHTML='';
+    gs.teams.forEach((t,i)=>{
+        const chip=document.createElement('div');
+        chip.className='team-chip'+(i===0?' active':'');
+        chip.id=`team-chip-${i}`; chip.style.color=t.color;
+        chip.innerHTML=`<div class="dot" style="background:${t.color}"></div><span>${t.name}</span><span class="score-badge" id="score-${i}">0 pts</span>`;
+        bar.appendChild(chip);
+    });
+}
+
+function buildMural(){
+    const mural=document.getElementById('mural'); mural.innerHTML='';
+    odsData.forEach(ods=>{
+        const zone=document.createElement('div');
+        zone.className='drop-zone'; zone.dataset.id=ods.id;
+        zone.innerHTML=`<span class="zone-num">${ods.id}</span><span class="zone-label">ODS</span>`;
+        zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+        zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+        zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');tryPlace(parseInt(zone.dataset.id),parseInt(e.dataTransfer.getData('text/plain')),zone);});
+        zone.addEventListener('click',()=>handleZoneClick(zone));
+        mural.appendChild(zone);
+    });
+}
+
+function buildCardsPile(){
+    const pile=document.getElementById('cards-pile'); pile.innerHTML='';
+    [...odsData].sort(()=>Math.random()-.5).forEach(ods=>{
+        const card=document.createElement('div');
+        card.className='desc-card'; card.draggable=true; card.dataset.id=ods.id;
+        card.textContent=ods.desc;
+        card.style.borderTopColor=ods.color;
+        card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',ods.id);card.classList.add('dragging');deselectCard();});
+        card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+        card.addEventListener('click',()=>handleCardClick(card,ods.id));
+        pile.appendChild(card);
+    });
+}
+
+// INTERACTIONS
+function handleCardClick(card,odsId){
+    if(gs.selectedCard===odsId){deselectCard();return;}
+    deselectCard();
+    gs.selectedCard=odsId; card.classList.add('selected');
+    document.getElementById('default-hint').style.display='none';
+    document.getElementById('selected-card-hint').style.display='block';
+    document.querySelectorAll('.drop-zone:not(.filled)').forEach(z=>z.classList.add('selected-target'));
+}
+
+function handleZoneClick(zone){
+    if(!gs.selectedCard||zone.classList.contains('filled')){deselectCard();return;}
+    const zoneId=parseInt(zone.dataset.id);
+    document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('selected-target'));
+    tryPlace(zoneId,gs.selectedCard,zone);
+    deselectCard();
+}
+
+function deselectCard(){
+    if(gs.selectedCard){
+        const prev=document.querySelector(`.desc-card[data-id="${gs.selectedCard}"]`);
+        if(prev) prev.classList.remove('selected');
+    }
+    gs.selectedCard=null;
+    document.getElementById('default-hint').style.display='block';
+    document.getElementById('selected-card-hint').style.display='none';
+    document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('selected-target'));
+}
+
+function tryPlace(zoneId,cardId,zoneEl){
+    if(zoneEl.classList.contains('filled')) return;
+    if(cardId===zoneId){
+        const data=odsData.find(o=>o.id===cardId);
+        const team=gs.teams[gs.currentTeam];
+        zoneEl.classList.add('filled','fill-pop');
+        zoneEl.style.backgroundColor=data.color;
+        zoneEl.innerHTML=`<div class="filled-content">
+            <div class="filled-num">ODS ${data.id}</div>
+            <div class="filled-title">${data.title}</div>
+            <div class="filled-team-dot" style="background:${team.color}"></div>
+        </div>`;
+        const card=document.querySelector(`.desc-card[data-id="${cardId}"]`);
+        if(card) card.remove();
+        team.score++;
+        document.getElementById(`score-${gs.currentTeam}`).textContent=`${team.score} pts`;
+        playSuccess();
+        gs.correctCount++;
+        updateProgress();
+        openFactModal(data,team);
+    } else {
+        zoneEl.classList.add('error-shake');
+        setTimeout(()=>zoneEl.classList.remove('error-shake'),400);
+        zoneEl.style.background='rgba(239,68,68,.15)';
+        setTimeout(()=>zoneEl.style.background='',350);
+        playError();
+        showToast('❌ Essa descrição não pertence a esse ODS! Tente outra.');
+    }
+}
+
+function updateProgress(){
+    const pct=Math.round((gs.correctCount/17)*100);
+    document.getElementById('progress-fill').style.width=pct+'%';
+    document.getElementById('progress-text').textContent=`${gs.correctCount} / 17 ODS`;
+    document.getElementById('progress-pct').textContent=pct+'%';
+}
+
+// FACT MODAL
+function openFactModal(data,team){
+    document.getElementById('modal-badge').textContent=data.id;
+    document.getElementById('modal-badge').style.background=data.color;
+    document.getElementById('modal-title').textContent=`ODS ${data.id}: ${data.title}`;
+    document.getElementById('modal-subtitle').textContent=data.desc;
+    document.getElementById('modal-icon').textContent=data.icon;
+    document.getElementById('modal-fact').textContent=data.fact;
+    const note=document.getElementById('modal-team-note');
+    note.textContent=`+1 ponto para ${team.name}!`;
+    note.style.background=team.color+'33'; note.style.color=team.color;
+    document.getElementById('fact-modal').classList.add('active');
+}
+
+function closeFactModal(){
+    document.getElementById('fact-modal').classList.remove('active');
+    if(gs.correctCount===17){endGame();return;}
+    gs.currentTeam=(gs.currentTeam+1)%gs.teams.length;
+    gs.teams.forEach((_,i)=>document.getElementById(`team-chip-${i}`)?.classList.toggle('active',i===gs.currentTeam));
+}
+
+// TIMER
+function startTimer(){
+    if(config.timerSeconds===0){document.getElementById('timer-display').textContent='∞';return;}
+    gs.remainingSeconds=config.timerSeconds; gs.totalSeconds=config.timerSeconds;
+    updateTimerDisplay();
+    gs.timerInterval=setInterval(()=>{
+        gs.remainingSeconds--;
+        updateTimerDisplay();
+        if(gs.remainingSeconds<=0){clearInterval(gs.timerInterval);timeUp();}
+    },1000);
+}
+
+function updateTimerDisplay(){
+    const s=gs.remainingSeconds, total=gs.totalSeconds;
+    const min=Math.floor(s/60).toString().padStart(2,'0'), sec=(s%60).toString().padStart(2,'0');
+    const el=document.getElementById('timer-display');
+    el.textContent=`${min}:${sec}`; el.className='timer-display';
+    if(s<=30) el.classList.add('danger'); else if(s<=60) el.classList.add('warning');
+    const pct=total>0?(s/total)*100:100;
+    const ring=document.getElementById('timer-ring-fill');
+    ring.setAttribute('stroke-dasharray',`${pct} 100`);
+    ring.style.stroke=s<=30?'#ef4444':s<=60?'#f59e0b':'#38bdf8';
+}
+
+function timeUp(){ showToast('⏰ Tempo esgotado!'); setTimeout(endGame,1500); }
+
+function endGame(){
+    clearInterval(gs.timerInterval);
+    playVictory();
+    buildVictoryScreen();
+    showScreen('victory');
+}
+
+function buildVictoryScreen(){
+    const msg=config.teacherMessage;
+    if(msg){ document.getElementById('teacher-message-display').style.display='block'; document.getElementById('teacher-message-text').textContent=`💬 "${msg}"`; }
+    const scoresDiv=document.getElementById('victory-scores'); scoresDiv.innerHTML='';
+    const maxScore=Math.max(...gs.teams.map(t=>t.score));
+    [...gs.teams].sort((a,b)=>b.score-a.score).forEach(t=>{
+        const card=document.createElement('div');
+        card.className='score-card'+(t.score===maxScore?' winner':'');
+        card.innerHTML=`<div class="s-name" style="color:${t.color}">${t.name}</div><div class="s-num" style="color:${t.color}">${t.score}</div><div class="s-label">ODS conectados</div>`;
+        scoresDiv.appendChild(card);
+    });
+    const elapsed=Math.round((Date.now()-gs.startTime)/1000);
+    document.getElementById('stats-row').innerHTML=`
+        <div class="stat-pill">⏱ Tempo: <strong>${Math.floor(elapsed/60)}m ${elapsed%60}s</strong></div>
+        <div class="stat-pill">✅ ODS: <strong>${gs.correctCount}/17</strong></div>
+        <div class="stat-pill">👥 Equipes: <strong>${gs.teams.length}</strong></div>`;
+    const mosaic=document.getElementById('ods-mosaic'); mosaic.innerHTML='';
+    odsData.forEach((ods,idx)=>{
+        const tile=document.createElement('div');
+        tile.className='mosaic-tile'; tile.style.background=ods.color; tile.style.animationDelay=`${idx*.05}s`;
+        tile.innerHTML=`<div class="t-num">ODS ${ods.id}</div><div class="t-title">${ods.title}</div>`;
+        mosaic.appendChild(tile);
+    });
+}
+
+function showScreen(name){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(`screen-${name}`).classList.add('active'); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); }
+
+window.onload=buildSetupUI;
+</script>
+</body>
+</html>
